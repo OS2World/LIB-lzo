@@ -1,0 +1,30 @@
+@echo off
+setlocal
+
+rem /* make_wcc.btm -- simple make driver for Watcom C32 v10.5
+rem  * Copyright (C) 1996 Markus F.X.J. Oberhumer
+rem  */
+
+iff "%_DOS" eq "DOS" then
+  rem You need GNU make from the djgpp v2 or emx distribution !
+  set mymake=make.exe
+  set emxopt=-t -p -X -c
+  set target=watcomc_32
+endiff
+iff "%_DOS" eq "OS2" then
+  rem You need GNU make !
+  set mymake=gnumake.exe
+  set target=watcomc
+endiff
+iff "%_DOS" eq "NT" then
+endiff
+
+%mymake "target=%target" "model=%model" %1 %2 %3 %4 %5 %6 %7 %8 %9
+if %? ne 0  goto error
+
+quit 0
+
+:error
+  @echo error in make
+  quit 1
+

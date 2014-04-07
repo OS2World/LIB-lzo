@@ -1,0 +1,86 @@
+@echo off
+setlocal
+set script=%@upper[%@name[%0]]
+
+rem /**********************************************************************
+rem // MSDOS 4DOS batch driver for lzo_test
+rem //
+rem // mfx 1996/05/13
+rem ***********************************************************************/
+
+set lzo_test=lzo.exe
+set lzo_test=..\lzo_test.exe
+
+set files=*.fil
+set files=d:/f/packtest/test1/*
+set files=-b1048576 -d5 e:/l/djgpp2/bin/cc1.exe
+set files=-s0 d:/f/packtest/corpus -d2
+set files=-s1 d:/f/packtest/corpus -d3
+
+set block=8192
+set block=10240
+set block=32768
+set block=524288
+set block=1048576
+set block=262144
+
+set f=test.tmp
+timer on /1
+gosub lzo_run
+timer /1
+perl table.pl %f > test.tab
+
+rem quit 0
+
+set block=8192
+set f=test2.tmp
+timer on /1
+gosub lzo_run
+timer /1
+perl table.pl %f > test2.tab
+
+quit 0
+
+
+rem ***********************************************************************/
+rem //
+rem ***********************************************************************/
+
+:lzo_run
+	del /q %f
+	for %m in (21 31) do gosub lzo_run_1
+	for %m in ( 1  2  3  4  5  6  7  8  9) do gosub lzo_run_1
+	for %m in (11 12 13 14 15 16 17 18 19) do gosub lzo_run_1
+	for %m in (61 71) do gosub lzo_run_1
+	for %m in (921 931 901 911) do gosub lzo_run_1
+	for %m in (902 912 942 962 972 982) do gosub lzo_run_1
+	return
+	for %m in (1010 1020 1030 1032 1034 1038) do gosub lzo_run_1
+	for %m in (1101) do gosub lzo_run_1
+	return
+	for %m in (1000 1011) do gosub lzo_run_1
+	return
+
+
+:lzo_runx
+	del /q %f
+	for %m in (1 9 11 19) do gosub lzo_run_1
+rem	for %m in (11 12 13 14 15 16 17 18 19) do gosub lzo_run_1
+rem	for %m in (1001) do gosub lzo_run_1
+	return
+
+:lzo_run9
+	del /q %f
+	for %m in (921 911 902 912 942 962 972 982) do gosub lzo_run_1
+	return
+
+
+:lzo_run_1
+	echo %lzo_test -m%m -n1 -b%[block] %files
+	%lzo_test -m%m -n1 -b%[block] %files >> %f
+	if %? ne 0  goto error
+	return
+
+:error
+	quit 1
+

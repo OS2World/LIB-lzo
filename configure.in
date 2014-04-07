@@ -1,0 +1,221 @@
+dnl Process this file with autoconf to produce a configure script.
+
+#
+#  configure.in -- autoconf configuration for the LZO library
+#
+#  This file is part of the LZO real-time data compression library.
+#
+#  Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
+#  Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+#
+#  The LZO library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of
+#  the License, or (at your option) any later version.
+#
+#  The LZO library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the LZO library; see the file COPYING.
+#  If not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+#  Markus F.X.J. Oberhumer
+#  markus.oberhumer@jk.uni-linz.ac.at
+#
+
+
+# /***********************************************************************
+# // Initialization
+# ************************************************************************/
+
+AC_INIT(src/lzo_util.c)
+AC_PREREQ(2.12)dnl			# need Autoconf 2.12 or higher
+AC_CONFIG_HEADER(config.ac:config.in)
+AC_CONFIG_AUX_DIR(config)
+AC_PREFIX_DEFAULT(/usr/local)
+AC_CANONICAL_HOST
+AC_ARG_PROGRAM
+sinclude(config/aclocal.m4)dnl
+
+
+# /***********************************************************************
+# // automake macros
+# ************************************************************************/
+
+PACKAGE=lzo
+VERSION=0.28
+AC_SUBST(PACKAGE)dnl
+AC_DEFINE_UNQUOTED(PACKAGE,"$PACKAGE")
+AC_SUBST(VERSION)dnl
+AC_DEFINE_UNQUOTED(VERSION,"$VERSION")
+ALL_LINGUAS=
+
+
+# /***********************************************************************
+# // Ignore environment settings (is this a good idea ?)
+# ************************************************************************/
+
+CC=""
+CFLAGS="-I. -DLZO_HAVE_CONFIG_AC"
+CXXFLAGS="$CFLAGS"
+ASFLAGS="$CFLAGS"
+LZO_CFLAGS=""
+LIBS=""
+AC_SUBST(ASFLAGS)dnl
+AC_SUBST(LZO_CFLAGS)dnl
+
+
+# /***********************************************************************
+# // Checks for compiler
+# ************************************************************************/
+
+AC_PROG_CC
+fp_PROG_CC_STDC
+AC_PROG_CC_C_O
+mfx_PROG_GCC_SR_BROKEN
+mfx_PROG_GCC_PIPE
+
+AC_PROG_RANLIB
+AC_CHECK_PROG(AR,ar,ar)
+ARFLAGS="rc"
+
+AC_SUBST(GCC)dnl
+AC_SUBST(ARFLAGS)dnl
+
+
+# /***********************************************************************
+# // Checks for other programs
+# ************************************************************************/
+
+AC_PROG_MAKE_SET
+fp_PROG_INSTALL
+AC_CHECK_PROG(MAKEDEPEND,makedepend,makedepend)
+AC_CHECK_PROG(RM,rm,rm -f)
+AC_CHECK_PROG(CAT,cat,cat)
+AC_CHECK_PROG(CHMOD,chmod,chmod)
+AC_CHECK_PROG(FIND,find,find)
+AC_CHECK_PROG(PERL,perl,perl)
+AC_CHECK_PROG(SORT,sort,sort)
+
+
+# /***********************************************************************
+# // Checks for libraries
+# ************************************************************************/
+
+AC_CHECK_LIB(z,zlibVersion)
+
+
+# /***********************************************************************
+# // Checks for system header files
+# ************************************************************************/
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS(assert.h ctype.h limits.h stddef.h unistd.h)
+AC_CHECK_HEADERS(memory.h sys/param.h)
+AC_CHECK_HEADERS(endian.h machine/endian.h sys/endian.h)
+AC_CHECK_HEADERS(unchecked.h)
+
+
+# /***********************************************************************
+# // Checks for library header files
+# ************************************************************************/
+
+AC_CHECK_HEADERS(zlib.h)
+
+
+# /***********************************************************************
+# // Checks for typedefs and structures
+# ************************************************************************/
+
+AC_CHECK_TYPE(ptrdiff_t,long)
+AC_TYPE_SIZE_T
+
+dnl no support for cross-compiling
+AC_CHECK_SIZEOF(unsigned short)
+AC_CHECK_SIZEOF(unsigned)
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(char *)
+mfx_CHECK_SIZEOF(ptrdiff_t)
+mfx_CHECK_SIZEOF(size_t)
+
+
+# /***********************************************************************
+# // Checks for compiler characteristics
+# ************************************************************************/
+
+AC_C_CONST
+
+dnl no support for cross-compiling
+mfx_C_BYTE_ORDER
+mfx_ASM_ALIGN
+
+
+# /***********************************************************************
+# // Checks for library functions
+# ************************************************************************/
+
+AC_CHECK_FUNCS(memcmp memcpy memmove memset)
+dnl AC_CHECK_FUNCS(basename)
+mfx_FUNC_MEMCMP
+
+
+# /***********************************************************************
+# // Checks for system services
+# ************************************************************************/
+
+
+# /***********************************************************************
+# // Customize some macros
+# ************************************************************************/
+
+MFX_C_CONST_BROKEN="no"
+if test $ac_cv_c_const = no ; then
+  MFX_C_CONST_BROKEN="yes"
+fi
+AC_SUBST(MFX_C_CONST_BROKEN)dnl
+
+
+if test "$GCC" = "yes" ; then :
+else
+  CFLAGS="$CFLAGS -O"
+  CXXFLAGS="$CXXFLAGS -O"
+fi
+
+
+# /***********************************************************************
+# // Unaligned memory access
+# ************************************************************************/
+
+mfx_config_lzo=$ac_aux_dir/config.lzo
+
+AC_CACHE_CHECK(for unaligned memory access, mfx_cv_c_unaligned,
+[mfx_cv_c_unaligned=no
+if mfx_cv_c_unaligned=`$mfx_config_lzo $host`; then :
+else { echo "configure: error: can not run $mfx_config_lzo" 1>&2; exit 1; }
+fi
+])
+
+case "$mfx_cv_c_unaligned" in
+  2)
+    AC_DEFINE(LZO_UNALIGNED_OK_2)
+    ;;
+  4)
+    AC_DEFINE(LZO_UNALIGNED_OK_4)
+    ;;
+  2+4)
+    AC_DEFINE(LZO_UNALIGNED_OK_2)
+    AC_DEFINE(LZO_UNALIGNED_OK_4)
+    ;;
+esac
+
+
+# /***********************************************************************
+# // Write output files
+# ************************************************************************/
+
+AC_OUTPUT(Makefile.ac:config/Makefile.in Makedefs.ac:config/Makedefs.in)
+

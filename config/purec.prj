@@ -1,0 +1,132 @@
+;
+;  purec.prj -- project file for Pure C Sep 20 1991 (Atari ST)
+;
+;  This file is part of the LZO real-time data compression library.
+;
+;  Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
+;  Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+;
+;  The LZO library is free software; you can redistribute it and/or
+;  modify it under the terms of the GNU General Public License as
+;  published by the Free Software Foundation; either version 2 of
+;  the License, or (at your option) any later version.
+;
+;  The LZO library is distributed in the hope that it will be useful,
+;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;  GNU General Public License for more details.
+;
+;  You should have received a copy of the GNU General Public License
+;  along with the LZO library; see the file COPYING.
+;  If not, write to the Free Software Foundation, Inc.,
+;  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+;
+;  Markus F.X.J. Oberhumer
+;  markus.oberhumer@jk.uni-linz.ac.at
+;
+
+;
+; Just for fun I've ported LZO to my old Atari ST. This fine machine
+; is powered by a Motorola 68000 CPU with 16 bit ints, 32 bit longs,
+; 32 bit size_t and a flat memory with 32 bit pointers.
+;
+
+;
+; WARNING:
+;   do *not* use Turbo C 2.03 (the predecessor of Pure C) - the
+;   implementation of arrays that are indexed by long integers is
+;   broken and wrong code will be produced in some cases
+;
+
+
+; name of executable program
+lzo_test.ttp
+
+
+; ----- compiler options -----
+.C[-P]			; use absolute calls
+.C[-Iinclude -Isrc]
+.C[-W -W-rch -W-par]
+.C[-L48]		; maximum identifier length
+;; .C[-G]			; size optimization
+;; .C[-Y]			; add debug information
+;; .C[-DLZO_DEBUG]
+
+; ----- linker options -----
+.L[-S=8192]		; stacksize
+;; .L[-Y]			; add debug information
+;; .L[-G]			; add global symbols
+;; .L[-L]			; add local symbols
+
+; ----- assembler options -----
+;; .S[-Y]			; add debug information
+
+
+=			; list of modules follows...
+
+PCXSTART.O		; startup code
+
+lzo_test.c
+
+src\lzo_util.c
+src\lzo1.c
+src\lzo1_99.c
+src\lzo1a.c
+src\lzo1a_99.c
+src\lzo1b_d1.c
+src\lzo1b_d2.c
+src\lzo1b_xx.c
+src\lzo1b_cc.c
+src\lzo1b_rr.c
+src\lzo1b\lzo1b_1.c
+src\lzo1b\lzo1b_2.c
+src\lzo1b\lzo1b_3.c
+src\lzo1b\lzo1b_4.c
+src\lzo1b\lzo1b_5.c
+src\lzo1b\lzo1b_6.c
+src\lzo1b\lzo1b_7.c
+src\lzo1b\lzo1b_8.c
+src\lzo1b\lzo1b_9.c
+src\lzo1b\lzo1b_99.c
+src\lzo1b_9x.c
+src\lzo1c_d1.c
+src\lzo1c_d2.c
+src\lzo1c_xx.c
+src\lzo1c_cc.c
+src\lzo1c_rr.c
+src\lzo1c\lzo1c_1.c
+src\lzo1c\lzo1c_2.c
+src\lzo1c\lzo1c_3.c
+src\lzo1c\lzo1c_4.c
+src\lzo1c\lzo1c_5.c
+src\lzo1c\lzo1c_6.c
+src\lzo1c\lzo1c_7.c
+src\lzo1c\lzo1c_8.c
+src\lzo1c\lzo1c_9.c
+src\lzo1c\lzo1c_99.c
+src\lzo1c_9x.c
+src\lzo1f_d1.c
+src\lzo1f_d2.c
+src\lzo1f_9x.c
+extra\lzo1f_c.c
+src\lzo1x_d1.c
+src\lzo1x_d2.c
+src\lzo1x_9x.c
+extra\lzo1x_c.c
+src\lzo1x_o.c
+src\lzo1y_d1.c
+src\lzo1y_d2.c
+src\lzo1y_9x.c
+src\lzo1y_o.c
+src\lzo2a_d1.c
+src\lzo2a_d2.c
+src\lzo2a_9x.c
+
+PCFLTLIB.LIB       ; floating point library
+PCSTDLIB.LIB       ; standard library
+
+; PCEXTLIB.LIB       ; extended library
+; PCBGILIB.LIB       ; BGI library
+; PCTOSLIB.LIB       ; TOS library
+; PCGEMLIB.LIB       ; AES and VDI library
+

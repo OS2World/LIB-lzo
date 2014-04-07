@@ -1,0 +1,59 @@
+
+============================================================================
+LZO -- a real-time data compression library
+============================================================================
+
+[ to be written - this is only a very first draft ]
+
+
+memory model
+=============
+The documentation indicates that LZO requires 32 bit integers. It's
+not the integer size that really matters, though, but the memory
+model. If your memory model allows to access pointers at 32 bit
+offsets, then there is no problem at all - LZO works fine on my
+old Atari ST, which has 16 bit integers and a flat 32 bit memory model.
+Using 'huge' 32 bit pointers under 16 bit MSDOS is a workaround for this.
+
+While with some minor changes LZO also would work with a strict
+16 bit memory model, I don't officially support this because
+this limits the maximum block size to 64k - and this makes the
+library incompatible with other platforms, i.e. you cannot decompress
+larger blocks compressed on those platforms.
+
+
+public integral types
+=====================
+- lzo_uint:   used as size_t, must be 32 bits or more for compatibility
+- lzo_uint32: *must* be 32 bits or more
+- lzo_ptr_t:  must be big enough to hold all bits of a lzo_voidp
+- lzo_bool:   can store the values 0 and 1
+
+- lzo_byte:   unsigned char (memory model dependant)
+- lzo_voidp:  void pointer (memory model dependant)
+
+
+public function types
+=====================
+- lzo_compress_t:
+- lzo_decompress_t:
+- lzo_optimize_t:
+- lzo_progress_callback_t:
+
+
+naming conventions
+==================
+
+e.g. LZO1X-999:
+        !---------- algorithm category
+         !--------- algorithm type
+           !!!----- compression level (1-9, 99, 999)
+
+LZO1*: strictly byte aligned
+LZO2*: use bit-shifting, slower decompression
+
+
+memory requirements
+===================
+
+

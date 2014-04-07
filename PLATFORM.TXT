@@ -1,0 +1,96 @@
+
+============================================================================
+LZO -- a real-time data compression library
+============================================================================
+
+This file serves as a simple database that lists all platforms
+on which LZO has been successfully compiled and tested.
+
+Please send me your additional entries only after *thoroughly* testing LZO -
+I trust in the reliability of your information. The ./util directory
+contains the check.sh script - run this on a larger directory tree.
+Some Perl scripts that can assist you in creating special test data
+for extreme cases are also included.
+
+After verifying that everything works fine you might want to run
+the 'official' LZO benchmark. See util/bench.sh.
+You can also try if the LZO_UNALIGNED_OK_2 and/or LZO_UNALIGNED_OK_4 macros
+work on your machine and if they improve performance. See config/config.lzo.
+
+The Calgary Corpus test suite is available from
+ftp://ftp.cpsc.ucalgary.ca/pub/projects/text.compression.corpus
+Note that your compressed length can differ by a few bytes from my
+results due to the non-determinism of some algorithms.
+
+In case of troubles try recompiling everything without optimizations -
+LZO has reportedly broken the optimizer of some compiler under AIX.
+
+Thanks for your support.
+
+
+
+   CPU           OS               compiler               comments           who
+==========  ==============  ======================  =====================  ====
+
+LZO 0.20
+--------
+hppa1.1     HP-UX 9.07      HP92453-01 A.09.77 HP C #102 #103               pde
+i486        Linux 1.2.6     gcc 2.6.3               #2 #4                   mfx
+i486        MSDOS 5.0       Borland C 4.00          #2 #4 #16 #99 #999      mfx
+i486        MSDOS 5.0       gcc 2.7.2 (djgpp v2)    #2 #4                   mfx
+i486        MSDOS 5.0       gcc 2.7.2 (emx 0.9b)    #2 #4 #101              mfx
+i486        MSDOS 5.0       Watcom C32 10.5         #2 #4                   mfx
+
+LZO 0.22
+--------
+c32/c2mp    ConvexOS 11.0   gcc 2.5.8                                       mfx
+i586        Linux 2.0.20    gcc 2.7.2               #2 #4                   mfx
+
+LZO 0.23
+--------
+i586        MSDOS 6.22      Microsoft C 7.00        #2 #4 #16 #99 #999      mfx
+sparc       Solaris 2.4     gcc 2.7.2               #102                     ro
+sparc       Solaris 2.5     gcc 2.7.2               UltraSparc CPU, #102     ro
+
+LZO 0.24
+--------
+i586        MSDOS 6.22      gcc 2.6.3 (djgpp v1)    #2 #4                   mfx
+i586        MSDOS 6.22      Watcom C32 9.5          #2 #4 #201              mfx
+
+LZO 0.26
+--------
+i486        MSDOS 5.0       Watcom C16 10.5         #2 #4 #16 #99 #999      mfx
+
+
+
+Comments
+========
+
+ID      description
+------  -----------------------------------------------------------------------
+#2      uses LZO_UNALIGNED_OK_2
+#4      uses LZO_UNALIGNED_OK_4
+#16     16 bit integers and 32 bit 'huge' pointers
+#64     64 bit long integers and 64 bit pointers
+#99     compression levels 99 untested or not supported
+#101    successfully tested with bounds-checking as well
+#102    Ran lzo_test with all algorithms against all files in the Calgary Corpus
+        text compression suite.
+#103    Linked lzo_test with Pure Software's Purify Version 3.0.1. Ran all
+        algorithms. There were no errors, warnings, memory leaked or potentailly
+        leaked.
+#201    LZO broke the optimizer, had to compile without (some) optimizations.
+#999    compression levels 999 untested or not supported
+
+
+
+Test crew
+=========
+
+who     name and email address
+------  -----------------------------------------------------------------------
+mfx     Markus F.X.J. Oberhumer <markus.oberhumer@jk.uni-linz.ac.at>
+pde     Paul D. Eccles <pde@sd.inri.com>
+ro      Rodolphe Ortalo <ortalo@laas.fr>
+
+

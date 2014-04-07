@@ -1,0 +1,51 @@
+@echo off
+setlocal
+set script=%@upper[%@name[%0]]
+
+rem /**********************************************************************
+rem // mfx 1996/04/28
+rem ***********************************************************************/
+
+set diff=diff -c1 -s
+
+set lzodir=../src
+set d1b=%[lzodir]/lzo1b
+set d1c=%[lzodir]/lzo1c
+
+
+rem /**********************************************************************
+rem // LZO1 vs LZO1A
+rem ***********************************************************************/
+
+%diff  %[lzodir]/lzo1_99.c  %[lzodir]/lzo1a_99.c
+
+
+rem /**********************************************************************
+rem // LZO1B vs LZO1C
+rem ***********************************************************************/
+
+%diff  %[lzodir]/config1b.h  %[lzodir]/config1c.h
+%diff  %[lzodir]/lzo1b_cc.h  %[lzodir]/lzo1c_cc.h
+
+%diff  %[lzodir]/lzo1b_d1.c  %[lzodir]/lzo1c_d1.c
+%diff  %[lzodir]/lzo1b_d2.c  %[lzodir]/lzo1c_d2.c
+%diff  %[lzodir]/lzo1b_rr.c  %[lzodir]/lzo1c_rr.c
+%diff  %[lzodir]/lzo1b_cc.c  %[lzodir]/lzo1c_cc.c
+%diff  %[lzodir]/lzo1b_xx.c  %[lzodir]/lzo1c_xx.c
+%diff  %[lzodir]/lzo1b_9x.c  %[lzodir]/lzo1c_9x.c
+
+%diff  %[d1b]/compr.h    %[d1c]/compr.h
+%diff  %[d1b]/lzo1b_1.c  %[d1c]/lzo1c_1.c
+%diff  %[d1b]/lzo1b_2.c  %[d1c]/lzo1c_2.c
+%diff  %[d1b]/lzo1b_3.c  %[d1c]/lzo1c_3.c
+%diff  %[d1b]/lzo1b_4.c  %[d1c]/lzo1c_4.c
+%diff  %[d1b]/lzo1b_5.c  %[d1c]/lzo1c_5.c
+%diff  %[d1b]/lzo1b_6.c  %[d1c]/lzo1c_6.c
+%diff  %[d1b]/lzo1b_7.c  %[d1c]/lzo1c_7.c
+%diff  %[d1b]/lzo1b_8.c  %[d1c]/lzo1c_8.c
+%diff  %[d1b]/lzo1b_9.c  %[d1c]/lzo1c_9.c
+%diff  %[d1b]/lzo1b_99.c %[d1c]/lzo1c_99.c
+
+
+quit 0
+

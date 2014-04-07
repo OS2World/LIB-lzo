@@ -1,0 +1,167 @@
+#
+#  Makedefs.os2 -- OS/2 makefile definitions for the LZO library
+#
+#  This file is part of the LZO real-time data compression library.
+#
+#  Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
+#  Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+#
+#  The LZO library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of
+#  the License, or (at your option) any later version.
+#
+#  The LZO library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the LZO library; see the file COPYING.
+#  If not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+#  Markus F.X.J. Oberhumer
+#  markus.oberhumer@jk.uni-linz.ac.at
+#
+
+
+#
+# --- tools ---
+# ftp://ftp-os2.nmsu.edu/os2/textutil/4os2251.zip    (4OS2)
+#
+# --- emx ---
+# ftp://ftp-os2.nmsu.edu/os2/unix/emx09c/emxrt.zip   (emx runtime)
+# ftp://ftp-os2.nmsu.edu/os2/unix/gnumake.zip        (GNU make)
+# ftp://ftp-os2.nmsu.edu/os2/unix/                   (lots of UNIX utilities)
+#
+
+
+# /***********************************************************************
+# // MAIN CONFIGURATION
+# // type something like 'gnumake target=watcomc' to select your compiler
+# ************************************************************************/
+
+ifeq ($(strip $(target)),)
+override target=watcomc
+override target=emx
+override target=emx_aout
+endif
+
+
+host_cpu = i486
+host_os = OS2
+
+mfx_dir_sep=\\
+mfx_include_sep=/
+mfx_vpath_sep=;
+mfx_cur_dir=
+
+E:=.exe
+
+
+# /***********************************************************************
+# // SYSTEM TOOLS
+# // be sure you have some UNIX-like utilities installed
+# ************************************************************************/
+
+MAKEDEPEND = @MAKEDEPEND@
+
+INSTALL = cp -p
+INSTALL_DATA = $(INSTALL)
+INSTALL_SCRIPT = $(INSTALL)
+
+RM = rm -f
+
+CAT = cat
+CHMOD = chmod
+FIND = gnufind
+PERL = perl
+SORT = gnusort
+
+
+# /***********************************************************************
+# // emx 0.9b + gcc 2.7.2
+# ************************************************************************/
+
+# !!! FIXME !!!
+
+ifeq ($(target),emx)
+
+A:=.lib
+O:=.obj
+LIBLZO = lzo$A
+
+CC = gcc -pipe
+MFX_GCC_WARN = 1
+MFX_GCC_WARN_ALL = 1
+
+CFLAGS += -Zmt
+ifeq ($(strip $(LZO_CPLUSPLUS)),)
+CFLAGS += -Wp,-lang-c89
+endif
+
+LZO_ARLIB = lib386 $@ $^
+
+endif
+
+
+# /***********************************************************************
+# // emx 0.9b + gcc 2.7.2 (a.out)
+# ************************************************************************/
+
+ifeq ($(target),emx_aout)
+
+CC = gcc
+MFX_GCC_WARN = 1
+MFX_GCC_WARN_ALL = 1
+
+ifeq ($(strip $(LZO_CPLUSPLUS)),)
+CFLAGS += -Wp,-lang-c89
+endif
+
+LZO_ARLIB = ar rcs $@ $^
+
+endif
+
+
+# /***********************************************************************
+# // Watcom C v10.5
+# ************************************************************************/
+
+# !!! FIXME !!!
+
+ifeq ($(target),watcomc)
+
+mfx_include_sep=\\
+MFX_<=$(subst /,\\,$<)
+
+A:=.lib
+O:=.obj
+LIBLZO = lzo$A
+
+ifeq ($(strip $(model)),)
+override model = -zq -mf -5r
+endif
+
+CC = wcl386 $(model)
+CFLAGS = -oneatx -fp3 -wx
+
+ifneq ($(strip $(LZO_CPLUSPLUS)),)
+CFLAGS_LZO += -cc++		# treat files as C++ source
+endif
+
+ifneq ($(LZO_DEBUG),)
+CFLAGS += -d1
+else
+# ???
+endif
+
+LZO_ARLIB = wlib -b $@ \@config\\wcc.rsp
+
+OUTPUT_OPTION = -fo=$@
+LINK.o_OUTPUT_OPTION  = -fe=$@
+
+endif
+
+

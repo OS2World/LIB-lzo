@@ -1,0 +1,146 @@
+#
+#  Makedefs.in -- autoconf makefile definitions for the LZO library
+#
+#  This file is part of the LZO real-time data compression library.
+#
+#  Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
+#  Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+#
+#  The LZO library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of
+#  the License, or (at your option) any later version.
+#
+#  The LZO library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the LZO library; see the file COPYING.
+#  If not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+#  Markus F.X.J. Oberhumer
+#  markus.oberhumer@jk.uni-linz.ac.at
+#
+
+
+# Ordinarily, the ./configure script figures out appropriate values of
+# the various @VARIABLES@ for your system.  Any time it sees a
+# @VARIABLE@ surrounded by "@ @", it substitutes a value for it.
+# If ./configure doesn't work on your system, then you must:
+#
+#	- copy config/Makedefs.in to Makedefs.ac
+#	- manually change the various @VARIABLES@ to appropriate values
+
+
+# /***********************************************************************
+# // MAIN CONFIGURATION
+# ************************************************************************/
+
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+PACK_VERSION = @VERSION@
+
+target = autoconf
+
+host_cpu = @host_cpu@
+host_os = @host_os@
+
+mfx_dir_sep=/
+mfx_include_sep=/
+mfx_vpath_sep=:
+mfx_cur_dir=./
+
+# directories
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = @includedir@
+libdir = @libdir@
+
+# misc.
+RAR_FLAGS = -ow -ol
+
+
+# /***********************************************************************
+# // SYSTEM TOOLS
+# ************************************************************************/
+
+SHELL = /bin/sh
+
+# This command searches a directory's *.c files for dependencies,
+# and then appends them to the directory's Makefile.  On UNIX systems it
+# is typically "makedepend."
+# You don't have to have this, it's just convenient for developers.
+
+MAKEDEPEND = @MAKEDEPEND@
+
+# How you install a program on your system.  On UNIX this is typically
+# an "install" utility, although "cp" could be used instead.  DOS would
+# use "copy".
+
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+# How you remove/delete a program on your system.  You should set flags
+# to do it silently and non-interactively.  It should be automatic and
+# not ask the user any (yes, no) questions about whether the deletion
+# should be performed or not.  On UNIX systems, this is "rm -f".  I
+# don't know how other systems do silent file deletion.
+
+RM = @RM@
+
+# How to find files on your system.
+# On UNIX systems, this is "find". DOS would use "gnufind" or
+# something similiar, as "find" is a native DOS command.
+
+FIND = @FIND@
+
+CAT = @CAT@
+CHMOD = @CHMOD@
+PERL = @PERL@
+SORT = @SORT@
+
+
+# /***********************************************************************
+# // COMPILER FLAGS
+# ************************************************************************/
+
+# Your system's compiler and appropriate flags.  These are essential.
+# NOTE: when compiling C++ code, you use $(CXX), _not_ $(CC) !
+# Likewise, $(CXXFLAGS), _not_ $(CFLAGS), and so forth.
+
+CC = @CC@
+CXX = @CXX@
+CPPFLAGS = @CPPFLAGS@
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
+ASFLAGS = @ASFLAGS@
+### DEFS = @DEFS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+
+LZO_CFLAGS = @LZO_CFLAGS@
+
+MFX_USE_GCC = @GCC@
+MFX_C_CONST_BROKEN = @MFX_C_CONST_BROKEN@
+MFX_PROG_GCC_SR_BROKEN = @MFX_PROG_GCC_SR_BROKEN@
+
+
+# "ar" and "ranlib" are what's used to build libraries on a UNIX system.
+# "ranlib" is often a dummy function that doesn't do anything.
+# If you're not in a UNIX-ish environment, and you don't typically use
+# "ar" to generate libraries, then you'll have to come up with your own
+# way to generate libraries.
+
+AR = @AR@
+ARFLAGS = @ARFLAGS@
+RANLIB = @RANLIB@
+
+ifneq ($(strip $(RANLIB)),)
+LZO_RANLIB = $(RANLIB) $@
+endif
+
+

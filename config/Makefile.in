@@ -1,0 +1,674 @@
+#
+#  Makefile.in -- GNU makefile for the LZO library
+#
+#  This file is part of the LZO real-time data compression library.
+#
+#  Copyright (C) 1997 Markus Franz Xaver Johannes Oberhumer
+#  Copyright (C) 1996 Markus Franz Xaver Johannes Oberhumer
+#
+#  The LZO library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation; either version 2 of
+#  the License, or (at your option) any later version.
+#
+#  The LZO library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the LZO library; see the file COPYING.
+#  If not, write to the Free Software Foundation, Inc.,
+#  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+#  Markus F.X.J. Oberhumer
+#  markus.oberhumer@jk.uni-linz.ac.at
+#
+
+
+
+# /***********************************************************************
+# // package default values
+# ************************************************************************/
+
+ifeq ($(strip $(PACKAGE)),)
+override PACKAGE = lzo
+endif
+ifeq ($(strip $(VERSION)),)
+override VERSION = 0.28
+endif
+ifeq ($(strip $(PACK_VERSION)),)
+PACK_VERSION := $(subst .,,$(VERSION))
+endif
+
+MFX_NULL:=
+MFX_SPACE:=$(MFX_NULL) $(MFX_NULL)
+
+
+# /***********************************************************************
+# // gcc options are configured at make-time
+# ************************************************************************/
+
+MFX_CC := $(strip $(firstword $(CC)))
+
+ifeq ($(strip $(MFX_USE_GCC)),)
+ifeq ($(MFX_CC),gcc)
+MFX_USE_GCC = yes
+endif
+ifeq ($(MFX_CC),gxx)
+MFX_USE_GCC = yes
+endif
+ifeq ($(MFX_CC),g++)
+MFX_USE_GCC = yes
+endif
+endif
+
+
+ifeq ($(strip $(MFX_USE_GCC)),yes)
+MFX_GCC_WARN = 1		# always enable the most important warnings
+## MFX_GCC_WARN_ALL = 1
+
+## CFLAGS += -MMD
+
+### architecture specific stuff
+ifeq ($(host_cpu),i386)
+MFX_USE_GCC_i386 = yes
+CFLAGS += -m386
+endif
+ifeq ($(host_cpu),i486)
+MFX_USE_GCC_i386 = yes
+CFLAGS += -m486
+endif
+ifeq ($(host_cpu),i586)
+MFX_USE_GCC_i386 = yes
+CFLAGS += -m486 -malign-jumps=0 -malign-loops=0 -malign-functions=0
+endif
+ifeq ($(host_cpu),i686)
+MFX_USE_GCC_i386 = yes
+CFLAGS += -m486 -malign-jumps=0 -malign-loops=0 -malign-functions=0
+endif
+
+### warnings
+ifneq ($(strip $(MFX_GCC_WARN)),)
+CFLAGS += -Wall
+ifneq ($(strip $(MFX_C_CONST_BROKEN)),yes)
+CFLAGS += -Wwrite-strings
+endif
+endif
+ifneq ($(strip $(MFX_GCC_WARN_ALL)),)
+CFLAGS += -W -pedantic
+endif
+CFLAGS_LZO += -Wpointer-arith -Wcast-align
+
+### even more warnings for all library source files
+ifneq ($(strip $(MFX_GCC_WARN_ALL)),)
+## CFLAGS_LZO += -W -pedantic
+CFLAGS_LZO += -Wbad-function-cast
+CFLAGS_LZO += -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
+CFLAGS_LZO += -Wshadow -Wnested-externs
+CFLAGS_LZO += -Wconversion
+## CFLAGS_LZO += -Wredundant-decls
+## CFLAGS_LZO += -Werror
+endif
+CFLAGS_LZO += -Wno-uninitialized
+
+### debugging
+ifneq ($(strip $(LZO_DEBUG)),)
+CFLAGS += -O1
+CFLAGS += -g
+## CFLAGS_LZO += -fno-builtin -fno-inline
+LDFLAGS += -g
+endif
+
+### optimizations / no debugging
+ifeq ($(strip $(LZO_DEBUG)),)
+# Do not use '-O3', this usually makes programs slower.
+CFLAGS += -O2
+ifeq ($(strip $(MFX_USE_GCC_i386)),yes)
+CFLAGS_LZO += -fomit-frame-pointer -fforce-addr
+endif
+CFLAGS_LZO += -Winline
+LDFLAGS += -s
+endif
+
+### work around compiler bugs
+ifeq ($(strip $(MFX_PROG_GCC_SR_BROKEN)),yes)
+CFLAGS += -fno-strength-reduce
+else
+ifeq ($(strip $(MFX_USE_GCC_i386)),yes)
+CFLAGS += -fno-strength-reduce
+endif
+endif
+
+### bounds checking
+ifneq ($(strip $(LZO_BOUNDS_CHECKING)),)
+CFLAGS  += -fbounds-checking
+LDFLAGS += -fbounds-checking
+endif
+
+### C++
+ifneq ($(strip $(LZO_CPLUSPLUS)),)
+CFLAGS_LZO += -x c++		# treat files as C++ source
+CFLAGS_LZO += -fconserve-space
+else
+CFLAGS_LZO += -Wno-unused	# don't warn about unused parameters
+endif
+
+### assembler
+AS = $(CC)
+ASFLAGS += -x assembler-with-cpp -Wall
+ifneq ($(strip $(LZO_DEBUG)),)
+ASFLAGS += -DLZO_DEBUG
+endif
+COMPILE.S = $(AS) $(ASFLAGS) $(CPPFLAGS) $(TARGET_MACH) -c
+
+endif
+
+
+# /***********************************************************************
+# // more make-time configuration
+# ************************************************************************/
+
+# suffixes of libraries, objects and executables
+ifndef A
+A:=.a
+endif
+ifndef E
+E:=
+endif
+ifndef O
+O:=.o
+endif
+ifndef SO
+SO=$(O)
+endif
+
+ifndef LZO_ARLIB
+LZO_ARLIB = $(AR) $(ARFLAGS) $@ $^
+endif
+
+ifndef LINK.o_OUTPUT_OPTION
+LINK.o_OUTPUT_OPTION = -o $@
+endif
+
+# this hack is needed for some MSDOS compilers
+ifndef MFX_<
+MFX_<=$<
+endif
+
+# name of the library to be built
+ifndef LIBLZO
+LIBLZO = liblzo$A
+endif
+
+
+ifneq ($(strip $(LZO_DEBUG)),)
+CFLAGS        += -DLZO_DEBUG
+endif
+## CFLAGS        += -DLZO_COLLECT_STATS
+
+CFLAGS        += -Iinclude
+CFLAGS_LZO    += -I$(SRCDIR)
+CFLAGS_LZO1B  += -I$(SRCDIR)$(mfx_include_sep)lzo1b
+CFLAGS_LZO1C  += -I$(SRCDIR)$(mfx_include_sep)lzo1c
+
+LDLIBS += $(LIBS)
+
+
+# /***********************************************************************
+# // shared library support (TODO)
+# ************************************************************************/
+
+ifeq ($(strip $(host_os)),linux-gnu)#	# Linux ELF
+# SO:=.so
+# LIBLZO = liblzo.so.$(VERSION)
+# CFLAGS_LZO += -fPIC
+# LDFLAGS += -shared
+# LZO_ARLIB, LZO_RANLIB, install ???
+endif
+
+
+# /***********************************************************************
+# // main targets
+# ************************************************************************/
+
+VPATH := .$(mfx_vpath_sep)$(SRCDIR)$(mfx_vpath_sep)extra
+
+.PHONY: default all check test run_test bench benchmark
+
+default: lib lzo_test$(E)
+all: default extra simple$(E)
+
+check test run_test: lzo_test$(E)
+	$(mfx_cur_dir)$< -mavail -n10 -q COPYING
+	$(mfx_cur_dir)$< -mavail -n10 -q lzo_test$(E)
+ifeq ($(mfx_host_os),UNIX)
+	$(FIND) . -type f -print | $(mfx_cur_dir)$< -m71 -q -@
+	/bin/sh util/check.sh $(SRCDIR)
+	@echo
+	@echo All tests passed. Now you are ready to install LZO.
+	@echo
+else
+	@echo All tests passed.
+endif
+
+bench benchmark: lzo_test$(E)
+	@echo Running benchmarks, please be patient...
+	$(mfx_cur_dir)$< -m71  -n1000  COPYING
+	$(mfx_cur_dir)$< -m61  -n1000  COPYING
+
+
+# /***********************************************************************
+# // some compile and link rules
+# ************************************************************************/
+
+ifeq (contrib/makefile.ac,$(wildcard contrib/makefile.ac))
+include contrib/makefile.ac
+else
+ifeq (contrib/makefile.in,$(wildcard contrib/makefile.in))
+include contrib/makefile.in
+endif
+endif
+
+%$(O) : %.c
+	$(strip $(COMPILE.c) $(OUTPUT_OPTION) $(MFX_<))
+
+
+ifeq ($(strip $(MFX_LINK)),)
+MFX_LINK = $(strip $(LINK.o) $(LINK.o_OUTPUT_OPTION) $^ $(LOADLIBES) $(LDLIBS))
+endif
+
+lzo_test$(E) : %$(E) : %$(O) $(LZO_TEST_OBJ) $(LIBLZO)
+	$(MFX_LINK)
+
+simple$(E) : %$(E) : %$(O) $(LIBLZO)
+	$(MFX_LINK)
+
+
+lzo_test$(O) simple$(O) : %$(O) : %.c
+	$(strip $(COMPILE.c) $(OUTPUT_OPTION) $(MFX_<))
+
+
+# /***********************************************************************
+# // library files
+# ************************************************************************/
+
+LZO1_OBJS := lzo1$(SO) lzo1_99$(SO)
+
+LZO1A_OBJS := lzo1a$(SO) lzo1a_99$(SO)
+
+LZO1B_ALG_OBJS := \
+	lzo1b_d1$(SO) lzo1b_d2$(SO) lzo1b_xx$(SO) lzo1b_cc$(SO) lzo1b_rr$(SO) \
+	lzo1b_9x$(SO)
+LZO1B_COMPR_OBJS := \
+	lzo1b_1$(SO) lzo1b_2$(SO) lzo1b_3$(SO) lzo1b_4$(SO) lzo1b_5$(SO) \
+	lzo1b_6$(SO) lzo1b_7$(SO) lzo1b_8$(SO) lzo1b_9$(SO) \
+	lzo1b_99$(SO)
+LZO1B_OBJS := $(LZO1B_ALG_OBJS) $(LZO1B_COMPR_OBJS)
+
+LZO1C_ALG_OBJS := \
+	lzo1c_d1$(SO) lzo1c_d2$(SO) lzo1c_xx$(SO) lzo1c_cc$(SO) lzo1c_rr$(SO) \
+	lzo1c_9x$(SO)
+LZO1C_COMPR_OBJS := \
+	lzo1c_1$(SO) lzo1c_2$(SO) lzo1c_3$(SO) lzo1c_4$(SO) lzo1c_5$(SO) \
+	lzo1c_6$(SO) lzo1c_7$(SO) lzo1c_8$(SO) lzo1c_9$(SO) \
+	lzo1c_99$(SO)
+LZO1C_OBJS := $(LZO1C_ALG_OBJS) $(LZO1C_COMPR_OBJS)
+
+LZO1F_OBJS := lzo1f_d1$(SO) lzo1f_d2$(SO) lzo1f_c$(SO) lzo1f_9x$(SO)
+
+LZO1X_OBJS := lzo1x_d1$(SO) lzo1x_d2$(SO) lzo1x_c$(SO) lzo1x_9x$(SO) \
+	lzo1x_o$(SO)
+
+LZO1Y_OBJS := lzo1y_d1$(SO) lzo1y_d2$(SO) lzo1y_9x$(SO) lzo1y_o$(SO)
+
+LZO2A_OBJS := lzo2a_d1$(SO) lzo2a_d2$(SO) lzo2a_9x$(SO)
+
+## LZO2B_OBJS := lzo2b_9x$(SO)
+
+
+LIB_OBJS = lzo_util$(SO) $(LZO1_OBJS) $(LZO1A_OBJS) $(LZO1B_OBJS) \
+	$(LZO1C_OBJS) $(LZO1F_OBJS) $(LZO1X_OBJS) $(LZO1Y_OBJS) \
+	$(LZO2A_OBJS) $(LZO2B_OBJS) $(LZO_ASM_OBJS)
+
+
+# /***********************************************************************
+# // library compile rules
+# ************************************************************************/
+
+lzo_util$(SO) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1A_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1A) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1B_ALG_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1B) $(OUTPUT_OPTION) $(MFX_<))
+
+$(LZO1B_COMPR_OBJS) : %$(SO) : $(SRCDIR)/lzo1b/%.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1B) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1C_ALG_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1C) $(OUTPUT_OPTION) $(MFX_<))
+
+$(LZO1C_COMPR_OBJS) : %$(SO) : $(SRCDIR)/lzo1c/%.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1C) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1F_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1F) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1X_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1X) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO1Y_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO1Y) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO2A_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO2A) $(OUTPUT_OPTION) $(MFX_<))
+
+
+$(LZO2B_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(CFLAGS_LZO2B) $(OUTPUT_OPTION) $(MFX_<))
+
+
+# /***********************************************************************
+# // library assembler section
+# ************************************************************************/
+
+ifeq ($(strip $(MFX_USE_GCC_i386)),yes)
+
+VPATH += $(mfx_vpath_sep)arch/i386
+
+LZO_ASM_OBJS += lzo1c_s1$(SO) lzo1c_s2$(SO)
+LZO_ASM_OBJS += lzo1f_s1$(SO) lzo1f_s2$(SO)
+LZO_ASM_OBJS += lzo1x_s1$(SO) lzo1x_s2$(SO)
+LZO_ASM_OBJS += lzo1y_s1$(SO) lzo1y_s2$(SO)
+
+$(LZO_ASM_OBJS) : %$(SO) : %.S
+	$(strip $(COMPILE.S) $(OUTPUT_OPTION) $(MFX_<))
+
+# dependencies
+lzo1c_s1$(SO) lzo1c_s2$(SO) : arch/i386/lzo1c_d.sh
+lzo1f_s1$(SO) lzo1f_s2$(SO) : arch/i386/lzo1f_d.sh
+lzo1x_s1$(SO) lzo1x_s2$(SO) : arch/i386/lzo1x_d.sh
+lzo1y_s1$(SO) lzo1y_s2$(SO) : arch/i386/lzo1x_d.sh
+$(LZO_ASM_OBJS) : arch/i386/lzo_asm.sh arch/i386/enter.sh arch/i386/leave.sh
+
+endif
+
+
+# /***********************************************************************
+# // library targets
+# ************************************************************************/
+
+.PHONY: lib lib_obj nm extra
+
+lib: $(LIBLZO)
+
+lib_obj: $(LIB_OBJS)
+
+$(LIBLZO) : $(LIB_OBJS)
+	-$(RM) $@
+	$(LZO_ARLIB)
+	$(LZO_RANLIB)
+
+nm: $(LIBLZO)
+	nm --extern-only $<
+
+
+EXTRA_SRCS := $(wildcard extra/*.c)
+EXTRA_OBJS := $(strip $(notdir $(EXTRA_SRCS:.c=$(SO))))
+EXTRA_OBJS := $(filter-out $(LIB_OBJS),$(EXTRA_OBJS))
+
+extra: $(EXTRA_OBJS)
+
+$(EXTRA_OBJS) : %$(SO) : %.c
+	$(strip $(COMPILE.c) $(CFLAGS_LZO) $(OUTPUT_OPTION) $(MFX_<))
+
+
+# /***********************************************************************
+# // installation
+# ************************************************************************/
+
+.PHONY: install-include install-lib install
+
+ifneq ($(strip $(includedir)),)
+install-include : include/lzoconf.h include/lzo1.h include/lzo1a.h include/lzo1b.h include/lzo1c.h include/lzo1f.h include/lzo1x.h include/lzo1y.h include/lzo2a.h
+	$(INSTALL_DATA) $^ $(includedir)
+endif
+
+ifneq ($(strip $(libdir)),)
+install-lib : $(LIBLZO)
+	$(INSTALL) $^ $(libdir)
+endif
+
+install : install-include install-lib
+	@echo 'LZO' library installed.
+
+
+# /***********************************************************************
+# // autoconf
+# ************************************************************************/
+
+.PHONY: autoconf autoconf-clean
+
+autoconf: configure config.in
+
+configure: configure.in config/aclocal.m4
+	autoconf
+
+config.in: configure.in acconfig.h
+	autoheader
+	touch $@
+
+autoconf-clean:
+	@echo "This command is intended for maintainers to use; it"
+	@echo "deletes files that may require special tools to rebuild."
+	-$(RM) configure config.in
+
+
+# /***********************************************************************
+# // clean
+# ************************************************************************/
+
+.PHONY: mostlyclean clean configure-clean distclean realclean maintainer-clean
+
+mostlyclean:
+	-$(RM) *.o *.obj *.d *.err *.tmp
+	-$(RM) $(LIBLZO) lzo_test$(E) simple$(E)
+
+clean: mostlyclean
+
+configure-clean:
+	-$(RM) *.ac config.cache config.log config.status
+
+distclean realclean: clean configure-clean
+
+maintainer-clean: distclean autoconf-clean
+
+
+# /***********************************************************************
+# // distribution and packing
+# ************************************************************************/
+
+PACK_BZIP  := $(PACKAGE)-$(PACK_VERSION).tbz
+PACK_GZIP  := $(PACKAGE)-$(PACK_VERSION).tgz
+PACK_RAR   := $(PACKAGE)-$(PACK_VERSION).rar
+PACK_RKIVE := $(PACKAGE)-$(PACK_VERSION).rkv
+PACK_UUE   := $(PACKAGE)-$(PACK_VERSION).uue
+PACK_TAR   := $(PACKAGE)-$(PACK_VERSION).tar
+PACK_ZIP   := $(PACKAGE)-$(PACK_VERSION).zip
+
+FILES_LST  := config$(mfx_dir_sep)files.lst
+FFILES_LST := $(PACKAGE)-$(VERSION)$(mfx_dir_sep)$(FILES_LST)
+
+
+.PHONY: $(FILES_LST) distfiles dist
+.PHONY: bzip gzip rar rar1 rar155 rar2 rkive tar uue zip zip0
+
+$(FILES_LST):
+	($(FIND) ../$(PACKAGE)-$(VERSION) -type f -print | $(PERL) config/mkdist.pl -nz config/dist.lst) > $@
+
+distfiles: $(FILES_LST)
+
+
+dist: gzip
+
+bzip: $(FILES_LST)
+	$(CAT) $< | (cd .. && tar -cvf- -T- | bzip > $(PACK_BZIP))
+
+gzip: $(FILES_LST)
+	$(CAT) $< | (cd .. && tar -cvf- -T- | gzip -9 > $(PACK_GZIP))
+
+rar rar1 rar155 rar2: $(FILES_LST)
+	-$(RM) ../$(PACK_RAR)
+	(cd .. && $@ a -s -m5 -tl $(RAR_FLAGS) $(PACK_RAR) @$(FFILES_LST))
+
+rkive: $(FILES_LST)
+	-$(RM) ../$(PACK_RKIVE)
+	(cd .. && rkive -c -mt $(PACK_RKIVE) @$(FFILES_LST))
+
+tar: $(FILES_LST)
+	$(CAT) $< | (cd .. && tar -cvf $(PACK_TAR) -T-)
+
+uue: gzip
+	(cd .. && uuencode $(PACK_GZIP) $(PACK_GZIP) > $(PACK_UUE))
+
+zip: $(FILES_LST)
+	-$(RM) ../$(PACK_ZIP)
+	$(CAT) $< | (cd .. && zip $(PACK_ZIP) -oD9 -@)
+
+zip0: $(FILES_LST)
+	-$(RM) ../$(PACK_ZIP)
+	$(CAT) $< | (cd .. && zip $(PACK_ZIP) -oD0 -@)
+
+
+# /***********************************************************************
+# // some special maintainer targets
+# ************************************************************************/
+
+GREP_FILES := CHANGE.LOG COPYING LZO.TXT LZOAPI.TXT LZO.lsm PLATFORM.TXT
+
+UPPER_FILES += $(GREP_FILES)
+UPPER_FILES += Makefile config/Makefile.in
+UPPER_FILES += config/Makedefs.in config/Makedefs.dos config/Makedefs.os2
+UPPER_FILES += arch/i386/lzo1c_s1.S arch/i386/lzo1c_s2.S
+UPPER_FILES += arch/i386/lzo1f_s1.S arch/i386/lzo1f_s2.S
+UPPER_FILES += arch/i386/lzo1x_s1.S arch/i386/lzo1x_s2.S
+UPPER_FILES += arch/i386/lzo1y_s1.S arch/i386/lzo1y_s2.S
+
+.PHONY: grep chmod uppercase _rename rename mem
+
+grep:
+	mfxgrep -Xc   -e '\p\s+\#'  Makefile config/Make*.*
+	mfxgrep -Xc   -e '[\z\t]\q' Makefile config/Make*.*
+	mfxgrep -Xc   -e '[\z\t]\q' configure.in config/*.m4 config/*.lst
+	mfxgrep -Xc   -e '[\z\t]\q' $(GREP_FILES)
+	mfxgrep -Xc   -e '\t' $(GREP_FILES)
+	mfxgrep -Xc   -e '\t' include/*.h
+	mfxgrep -Xc   -e '[\z\t]\q' include/*.h
+	mfxgrep -XlcB -e '\r' -r
+
+chmod:
+	-chmod +x    configure
+	-chmod +x    util/*.pl util/*.sh
+	-chmod +x    config/config.lzo config/*.pl
+	-chmod +x,-w config/config.guess config/config.sub
+	-chmod +x,-w config/install-sh config/mkinstalldirs
+	-chmod    -w COPYING
+
+uppercase: $(UPPER_FILES)
+
+$(UPPER_FILES):
+	mv -i `echo $@ | tr A-Z a-z` $@
+
+_rename:
+	-mv -i configur configure
+	-mv -i configur.in configure.in
+	-mv -i config/config.gue config/config.guess
+	-mv -i config/install- config/install-sh
+	-mv -i config/mkinstal config/mkinstalldirs
+###	-mmv -r -p -v "arch/i386/*.s" "#1.S"
+
+rename: uppercase _rename chmod
+
+
+ifeq ($(mfx_host_os),MSDOS)
+mem:
+	mem
+endif
+
+
+# /***********************************************************************
+# // dependencies
+# ************************************************************************/
+
+DEPS := $(wildcard *.d)
+
+ifneq ($(strip $(DEPS)),)
+
+include $(DEPS)
+
+else
+
+lzo_test$(O)        : include/lzoconf.h
+lzo_util$(SO)       : include/lzoconf.h src/lzo_conf.h
+
+lzo1_99$(SO)        : $(SRCDIR)/config1.h
+lzo1a_99$(SO)       : $(SRCDIR)/config1a.h
+
+$(LZO1B_OBJS)       : $(SRCDIR)/config1b.h
+$(LZO1B_COMPR_OBJS) : $(SRCDIR)/lzo1b/compr.h $(SRCDIR)/lzo1b_c.ch
+lzo1b_d1$(SO)       : $(SRCDIR)/lzo1b_d.ch
+lzo1b_d2$(SO)       : $(SRCDIR)/lzo1b_d.ch
+lzo1b_rr$(SO)       : $(SRCDIR)/lzo1b_r.ch
+lzo1b_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+
+$(LZO1C_OBJS)       : $(SRCDIR)/config1c.h
+$(LZO1C_COMPR_OBJS) : $(SRCDIR)/lzo1c/compr.h $(SRCDIR)/lzo1b_c.ch
+lzo1c_d1$(SO)       : $(SRCDIR)/lzo1b_d.ch
+lzo1c_d2$(SO)       : $(SRCDIR)/lzo1b_d.ch
+lzo1c_rr$(SO)       : $(SRCDIR)/lzo1b_r.ch
+lzo1c_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+
+$(LZO1F_OBJS)       : $(SRCDIR)/config1f.h
+lzo1f_d1$(SO)       : $(SRCDIR)/lzo1f_d.ch
+lzo1f_d2$(SO)       : $(SRCDIR)/lzo1f_d.ch
+lzo1f_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+
+$(LZO1X_OBJS)       : $(SRCDIR)/config1x.h
+lzo1x_d0$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1x_d1$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1x_d2$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1x_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+lzo1x_o$(SO)        : $(SRCDIR)/lzo1x_oo.ch
+
+$(LZO1Y_OBJS)       : $(SRCDIR)/config1y.h $(SRCDIR)/config1x.h
+lzo1y_d0$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1y_d1$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1y_d2$(SO)       : $(SRCDIR)/lzo1x_d.ch
+lzo1y_9x$(SO)       : $(SRCDIR)/lzo1x_9x.c
+lzo1y_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+lzo1y_o$(SO)        : $(SRCDIR)/lzo1x_oo.ch
+
+$(LZO2A_OBJS)       : $(SRCDIR)/config2a.h
+lzo2a_d1$(SO)       : $(SRCDIR)/lzo2a_d.ch
+lzo2a_d2$(SO)       : $(SRCDIR)/lzo2a_d.ch
+lzo2a_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+
+$(LZO2B_OBJS)       : $(SRCDIR)/config2b.h
+lzo2b_9x$(SO)       : $(SRCDIR)/lzo_mchw.ch $(SRCDIR)/lzo_swd.ch
+
+endif
+
